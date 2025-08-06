@@ -1,0 +1,42 @@
+# COMMENTED OUT - CI/CD Pipeline Disabled for manual testing only
+# 
+# name: RAG Evaluation Pipeline
+# 
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+#   schedule:
+#     # Run daily at 2 AM UTC
+#     - cron: '0 2 * * *'
+#   workflow_dispatch:
+#     inputs:
+#       dataset_size:
+#         description: 'Number of test cases to evaluate'
+#         required: false
+#         default: '20'
+#         type: string
+#       dataset_name:
+#         description: 'Dataset to use for evaluation'
+#         required: false
+#         default: 'sample'
+#         type: choice
+#         options:
+#           - sample
+#           - ms_marco
+#           - custom
+# 
+# env:
+#   PYTHON_VERSION: '3.9'
+#   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#   DEEPEVAL_API_KEY: ${{ secrets.DEEPEVAL_API_KEY }}
+# 
+# jobs:
+#   # ... rest of the workflow is commented out
+#   # Uncomment when you want to re-enable CI/CD automation
+
+# To re-enable CI/CD:
+# 1. Uncomment this entire file
+# 2. Set up GitHub secrets: OPENAI_API_KEY, DEEPEVAL_API_KEY
+# 3. Commit and push changes 

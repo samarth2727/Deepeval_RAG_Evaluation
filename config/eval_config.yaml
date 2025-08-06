@@ -1,0 +1,67 @@
+# DeepEval Configuration
+
+# General Settings
+evaluation:
+  model: "gpt-4"
+  max_test_cases_per_run: 100
+  timeout_per_test_case: 60
+  parallel_execution: true
+  max_workers: 4
+
+# Retriever Metrics
+retriever_metrics:
+  contextual_relevancy:
+    enabled: true
+    threshold: 0.7
+    model: "gpt-4"
+    
+  contextual_recall:
+    enabled: true
+    threshold: 0.7
+    model: "gpt-4"
+    
+  contextual_precision:
+    enabled: true
+    threshold: 0.7
+    model: "gpt-4"
+
+# Generator Metrics (Custom GEval)
+generator_metrics:
+  answer_correctness:
+    enabled: true
+    threshold: 0.7
+    evaluation_criteria: "Evaluate if the actual output's answer is correct and complete from the input and retrieved context"
+    evaluation_steps:
+      - "Check if the answer directly addresses the question"
+      - "Verify factual accuracy against the retrieved context"
+      - "Assess completeness of the response"
+    model: "gpt-4"
+    
+  citation_accuracy:
+    enabled: true
+    threshold: 0.8
+    evaluation_criteria: "Check if citations are correct and relevant based on input and retrieved context"
+    evaluation_steps:
+      - "Verify that cited sources exist in the retrieved context"
+      - "Check if citations are properly formatted"
+      - "Assess relevance of cited content to the answer"
+    model: "gpt-4"
+
+# Dataset Configuration
+datasets:
+  ms_marco:
+    enabled: true
+    subset_size: 1000
+    path: "datasets/ms_marco_subset.json"
+    
+  synthetic:
+    enabled: true
+    num_samples: 500
+    domains: ["general", "technical", "scientific"]
+    
+# Reporting
+reporting:
+  output_format: ["html", "json", "csv"]
+  include_individual_scores: true
+  include_aggregate_stats: true
+  save_failed_cases: true 

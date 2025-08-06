@@ -1,0 +1,48 @@
+# Core RAG and Evaluation Framework
+deepeval>=0.21.0
+haystack-ai>=2.0.0
+llama-index>=0.9.0
+
+# OpenAI Integration
+openai>=1.0.0
+
+# Vector Database and Embeddings
+qdrant-client>=1.7.0
+sentence-transformers>=2.2.0
+
+# Data Processing and Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+datasets>=2.14.0
+
+# Web Framework and Visualization
+streamlit>=1.28.0
+plotly>=5.17.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Testing and CI/CD
+pytest>=7.4.0
+pytest-html>=3.2.0
+pytest-cov>=4.1.0
+
+# Configuration Management
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Logging and Monitoring
+loguru>=0.7.0
+
+# Development Tools
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+
+# Document Processing
+PyPDF2>=3.0.0
+python-docx>=0.8.11
+beautifulsoup4>=4.12.0
+
+# Additional utilities
+tqdm>=4.66.0
+requests>=2.31.0 
