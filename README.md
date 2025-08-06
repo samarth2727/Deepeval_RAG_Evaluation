@@ -52,7 +52,7 @@ graph TB
   - Answer Correctness: Factual accuracy of generated responses
   - Citation Accuracy: Proper attribution to source documents
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.9+
@@ -91,23 +91,23 @@ python src/main.py --dataset ms_marco --size 100
 streamlit run src/dashboard.py
 ```
 
-## 📊 **Evaluation Metrics**
+##  **Evaluation Metrics**
 
-### 🎯 **Retriever Metrics** (Component-Level)
+###  **Retriever Metrics** (Component-Level)
 - **Contextual Relevancy**: Measures if retrieved contexts are relevant to the query
 - **Contextual Recall**: Evaluates if all relevant information is retrieved  
 - **Contextual Precision**: Assesses precision of the retrieval system
 
-### ✅ **Generator Metrics** (Component-Level)
+###  **Generator Metrics** (Component-Level)
 - **Answer Correctness**: Custom GEval metric for factual accuracy
 - **Citation Accuracy**: Custom GEval metric for proper source attribution
 
-### 🔬 **Advanced Features**
+###  **Advanced Features**
 - **Synthetic Data Generation**: DeepEval Synthesizer creates additional test cases
 - **Component Isolation**: Separate evaluation of retriever vs generator
 - **Regression Detection**: Automated performance monitoring over time
 
-## 🧪 **Testing Framework**
+##  **Testing Framework**
 
 ### Unit & Integration Tests
 ```bash
@@ -140,7 +140,7 @@ pytest -m "integration"  # Integration tests
 - **A/B Testing**: Side-by-side comparison of different RAG configurations
 - **Custom Metrics**: Extensible framework for domain-specific evaluation
 
-## 🚀 **CI/CD Pipeline**
+##  **CI/CD Pipeline**
 
 ### GitHub Actions Workflow
 ```yaml
@@ -156,7 +156,7 @@ pytest -m "integration"  # Integration tests
 - **Slack Notifications**: Team alerts for significant changes
 - **Deployment Gates**: Quality-based deployment decisions
 
-## ⚙️ **Configuration**
+##  **Configuration**
 
 ### RAG System Configuration (`config/rag_config.yaml`)
 ```yaml
@@ -192,8 +192,7 @@ generator_metrics:
     criteria: "Factual accuracy and completeness"
     threshold: 0.75
 ```
-
-## 📁 **Project Structure**
+##  **Project Structure**
 
 ```
 RAG-Deepeval/
@@ -229,7 +228,7 @@ RAG-Deepeval/
 └── 🔐 .env.example           # Environment template
 ```
 
-## 🤝 **Contributing**
+##  **Contributing**
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -241,7 +240,7 @@ RAG-Deepeval/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 **Acknowledgments**
+##  **Acknowledgments**
 
 - **DeepEval Team** for the comprehensive evaluation framework
 - **Haystack** for the robust RAG pipeline architecture
@@ -250,7 +249,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-### 🔗 **Useful Links**
+###  **Useful Links**
 
 - [DeepEval Documentation](https://docs.confident-ai.com)
 - [Haystack Documentation](https://haystack.deepset.ai)
@@ -259,4 +258,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for production RAG evaluation** 
+**Built with for production RAG evaluation** 
