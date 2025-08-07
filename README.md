@@ -1,4 +1,4 @@
-# 🚀 RAG Evaluation POC with DeepEval & GPT-4o-mini
+# RAG Evaluation POC with DeepEval & GPT-4o-mini
 
 [![Production Ready](https://img.shields.io/badge/Production-Ready-green.svg)](https://github.com/samarthindex9/Deepeval_RAG)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue.svg)](https://github.com/samarthindex9/Deepeval_RAG/actions)
@@ -196,10 +196,10 @@ generator_metrics:
 
 ```
 RAG-Deepeval/
-├── 🔧 config/                 # Configuration files
+├──  config/                 # Configuration files
 │   ├── rag_config.yaml       # RAG system settings
 │   └── eval_config.yaml      # Evaluation parameters
-├── 📊 src/                    # Source code
+├──  src/                    # Source code
 │   ├── rag/                  # RAG system implementation
 │   │   ├── components.py     # Custom Haystack components
 │   │   ├── pipeline.py       # RAG pipeline orchestration
@@ -217,15 +217,15 @@ RAG-Deepeval/
 │   │   ├── dashboard.py      # Streamlit dashboard
 │   │   └── metrics_tracker.py     # Performance tracking
 │   └── main.py              # Main execution script
-├── 🧪 tests/                  # Comprehensive test suite
+├──  tests/                  # Comprehensive test suite
 │   ├── test_rag_system.py   # RAG system tests
 │   └── test_deepeval_framework.py  # Evaluation tests
-├── 🚀 .github/workflows/     # CI/CD automation
+├──  .github/workflows/     # CI/CD automation
 │   └── rag_evaluation.yml   # GitHub Actions workflow
-├── 📈 data/                   # Sample datasets
-├── 📋 reports/               # Evaluation reports
-├── 📚 docs/                   # Documentation
-└── 🔐 .env.example           # Environment template
+├──  data/                   # Sample datasets
+├──  reports/               # Evaluation reports
+├──  docs/                   # Documentation
+└──  .env.example           # Environment template
 ```
 
 ##  **Contributing**
@@ -236,7 +236,7 @@ RAG-Deepeval/
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 **License**
+##  **License**
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
