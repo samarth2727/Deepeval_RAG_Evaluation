@@ -6,7 +6,7 @@
 [![DeepEval](https://img.shields.io/badge/DeepEval-0.21%2B-purple.svg)](https://docs.confident-ai.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green.svg)](https://openai.com)
 
-A comprehensive **production-ready** RAG (Retrieval-Augmented Generation) evaluation system using **DeepEval framework** with **14+ specialized metrics**, **OpenAI GPT-4o-mini**, and automated **CI/CD pipeline** for continuous quality assurance.
+A comprehensive **production-ready** RAG (Retrieval-Augmented Generation) evaluation system using **DeepEval framework** with **specialized metrics**, **OpenAI GPT-4o-mini**, and automated **CI/CD pipeline** for continuous quality assurance.
 
 ## Architecture
 
@@ -127,7 +127,7 @@ pytest -m "integration"  # Integration tests
 - **Integration Tests**: End-to-end RAG pipeline testing
 - **Performance Tests**: Latency and throughput validation
 
-## 📈 **Monitoring & Observability**
+##  **Monitoring & Observability**
 
 ### Real-time Dashboard
 - **Performance Metrics**: Live tracking of evaluation scores
@@ -236,26 +236,3 @@ RAG-Deepeval/
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-##  **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-##  **Acknowledgments**
-
-- **DeepEval Team** for the comprehensive evaluation framework
-- **Haystack** for the robust RAG pipeline architecture
-- **OpenAI** for the powerful GPT-4o-mini model
-- **Sentence Transformers** for high-quality embeddings
-
----
-
-###  **Useful Links**
-
-- [DeepEval Documentation](https://docs.confident-ai.com)
-- [Haystack Documentation](https://haystack.deepset.ai)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
-- [MS MARCO Dataset](https://microsoft.github.io/msmarco/)
-
----
-
-**Built with for production RAG evaluation** 
