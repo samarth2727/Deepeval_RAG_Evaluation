@@ -29,6 +29,18 @@ graph TB
     J --> K
     K --> L[Streamlit Dashboard<br/>Real-time Monitoring]
     K --> M[CI/CD Pipeline<br/>Automated Testing]
+    
+    %% New Chunking Evaluation Flow
+    B --> N[Chunking Evaluator<br/>• Chunk Coherence<br/>• Chunk Completeness<br/>• Overlap Quality<br/>• Size Consistency<br/>• Semantic Boundaries]
+    N --> O[Processing Evaluator<br/>• Text Cleanliness<br/>• Content Preservation<br/>• Format Handling<br/>• Metadata Quality]
+    O --> P[Quality Optimization<br/>• Automatic Chunk Optimization<br/>• Quality-based Adjustments<br/>• Performance Monitoring]
+    P --> B
+    
+    %% Enhanced Results
+    N --> Q[Chunking Metrics<br/>Real-time Quality Scores]
+    O --> Q
+    Q --> L
+    Q --> K
 ```
 
 **Components:**
@@ -41,18 +53,46 @@ graph TB
 - **OpenAI GPT-4o-mini**: Temperature 0.1, max 512 tokens
 - **RAG System**: Query processing and response generation
 - **DeepEval Framework**: Component-level evaluation with 14+ metrics
+- **Chunking Evaluator**: Real-time chunking quality assessment
+  - Chunk coherence and completeness evaluation
+  - Overlap quality and size consistency monitoring
+  - Semantic boundary respect validation
+- **Processing Evaluator**: Document processing quality assessment
+  - Text cleanliness and content preservation
+  - Format handling and metadata quality
+  - Processing efficiency monitoring
+- **Quality Optimization**: Automatic chunk optimization based on evaluation scores
 - **Results**: Real-time dashboard and automated CI/CD monitoring
 
-**Evaluation Metrics:**
-- **Retriever Metrics**:
-  - Contextual Relevancy: Are retrieved contexts relevant to the query?
-  - Contextual Recall: Is all relevant information retrieved?
-  - Contextual Precision: How precise is the retrieval without noise?
-- **Generator Metrics**:
-  - Answer Correctness: Factual accuracy of generated responses
-  - Citation Accuracy: Proper attribution to source documents
+##  **Evaluation Metrics**
 
-##  Quick Start
+###  **Retriever Metrics** (Component-Level)
+- **Contextual Relevancy**: Measures if retrieved contexts are relevant to the query
+- **Contextual Recall**: Evaluates if all relevant information is retrieved  
+- **Contextual Precision**: Assesses precision of the retrieval system
+
+###  **Generator Metrics** (Component-Level)
+- **Answer Correctness**: Custom GEval metric for factual accuracy
+- **Citation Accuracy**: Custom GEval metric for proper source attribution
+
+###  **Chunking Evaluation Metrics** (Processing-Level)
+- **Chunk Coherence**: Evaluates semantic coherence and logical flow within chunks
+- **Chunk Completeness**: Assesses if chunks contain complete information units
+- **Overlap Quality**: Evaluates quality of chunk overlaps for context preservation
+- **Size Consistency**: Monitors chunk size uniformity and consistency
+- **Semantic Boundaries**: Checks if chunks respect sentence and paragraph boundaries
+- **Text Cleanliness**: Evaluates text formatting and processing quality
+- **Content Preservation**: Ensures original meaning is maintained during processing
+- **Metadata Quality**: Assesses completeness and accuracy of chunk metadata
+
+###  **Advanced Features**
+- **Synthetic Data Generation**: DeepEval Synthesizer creates additional test cases
+- **Component Isolation**: Separate evaluation of retriever vs generator
+- **Regression Detection**: Automated performance monitoring over time
+- **Quality Optimization**: Automatic chunk optimization based on evaluation scores
+- **Real-time Monitoring**: Live chunking quality assessment during processing
+
+##  **Quick Start**
 
 ### Prerequisites
 - Python 3.9+
@@ -77,55 +117,109 @@ cp .env.example .env
 export OPENAI_API_KEY=your-api-key-here
 ```
 
-3. **Run evaluation:**
-```bash
-# Quick test with sample data
-python src/main.py --dataset sample --size 5
-
-# Full MS MARCO evaluation
-python src/main.py --dataset ms_marco --size 100
-```
-
 4. **Launch monitoring dashboard:**
 ```bash
 streamlit run src/dashboard.py
 ```
 
-##  **Evaluation Metrics**
+##  **🚀 Execution Commands**
 
-###  **Retriever Metrics** (Component-Level)
-- **Contextual Relevancy**: Measures if retrieved contexts are relevant to the query
-- **Contextual Recall**: Evaluates if all relevant information is retrieved  
-- **Contextual Precision**: Assesses precision of the retrieval system
+### **Basic RAG Evaluation**
+```bash
+# Quick evaluation with sample data
+python src/main.py --dataset sample --size 10
 
-###  **Generator Metrics** (Component-Level)
-- **Answer Correctness**: Custom GEval metric for factual accuracy
-- **Citation Accuracy**: Custom GEval metric for proper source attribution
+# Full evaluation with MS MARCO dataset
+python src/main.py --dataset ms_marco --size 100
 
-###  **Advanced Features**
-- **Synthetic Data Generation**: DeepEval Synthesizer creates additional test cases
-- **Component Isolation**: Separate evaluation of retriever vs generator
-- **Regression Detection**: Automated performance monitoring over time
+# Custom documents evaluation
+python src/main.py --dataset custom --documents path/to/doc1.txt path/to/doc2.pdf
+```
 
-##  **Testing Framework**
+### **Chunking Evaluation Commands**
+```bash
+# Test chunking evaluations directly
+python test_chunking_evaluations.py
 
-### Unit & Integration Tests
+# Run with chunking evaluations enabled (default)
+python src/main.py --dataset sample --size 20
+
+# Run without chunking evaluations (faster)
+python src/main.py --dataset sample --size 20 --no-chunking-eval
+```
+
+### **Advanced Evaluation Commands**
+```bash
+# Large-scale evaluation
+python src/main.py --dataset ms_marco --size 500
+
+# Evaluation with custom documents
+python src/main.py --dataset custom --size 50 --documents data/*.txt
+
+# Save results to specific location
+python src/main.py --dataset sample --size 20 --save-results reports/my_eval.json
+
+# Run evaluation without saving results
+python src/main.py --dataset sample --size 20 --no-save
+```
+
+### **Testing Commands**
 ```bash
 # Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=src --cov-report=html
-
 # Run specific test categories
 pytest -m "not slow"  # Quick tests only
 pytest -m "integration"  # Integration tests
+pytest tests/test_rag_system.py -v  # Specific test file
+
+# Run with coverage
+pytest --cov=src --cov-report=html
 ```
 
-### Test Categories
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end RAG pipeline testing
-- **Performance Tests**: Latency and throughput validation
+### **Dashboard Commands**
+```bash
+# Launch dashboard
+streamlit run src/dashboard.py
+
+# Launch with custom port
+streamlit run src/dashboard.py --server.port 8502
+
+# Launch in headless mode
+streamlit run src/dashboard.py --server.headless true
+```
+
+### **Expected Output with Chunking Evaluations**
+```bash
+python src/main.py --dataset sample --size 5
+
+# Output includes:
+🎉 Evaluation completed successfully!
+
+🔍 Chunking Evaluation Results:
+  Chunking Quality: 0.847
+  Processing Quality: 0.892
+  Evaluation Time: 2.34s
+  Processing Time: 1.23s
+  Total Chunks: 45
+  Avg Chunks per Doc: 15.0
+
+📊 Evaluation Summary:
+Components Evaluated: retriever, generator
+Total Test Cases: 5
+Execution Time: 15.67s
+Overall Score: 0.823
+Performance Grade: Excellent
+
+📈 Component Scores:
+  Retriever:
+    contextual_relevancy: 0.856
+    contextual_recall: 0.789
+    contextual_precision: 0.823
+  Generator:
+    answer_correctness: 0.812
+    citation_accuracy: 0.845
+```
 
 ##  **Monitoring & Observability**
 

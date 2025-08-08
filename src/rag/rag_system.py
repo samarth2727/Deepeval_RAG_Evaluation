@@ -183,52 +183,123 @@ class RAGSystem:
         self.pipeline.connect("retriever.documents", "prompt_builder.documents")
         self.pipeline.connect("prompt_builder", "generator")
     
-    def index_documents(self, document_paths: List[str]) -> Dict[str, Any]:
+    def index_documents(self, document_paths: List[str], enable_evaluations: bool = True) -> Dict[str, Any]:
         """
-        Index documents into the vector database
+        Index documents into the vector database with optional evaluations
         
         Args:
             document_paths: List of paths to documents to index
+            enable_evaluations: Whether to enable chunking evaluations
             
         Returns:
-            Dictionary with indexing results and statistics
+            Dictionary with indexing results, statistics, and evaluations
         """
-        logger.info(f"Starting document indexing for {len(document_paths)} files")
+        logger.info(f"Starting document indexing for {len(document_paths)} files with evaluations: {enable_evaluations}")
         
         try:
-            results = []
-            total_docs = 0
-            
-            for doc_path in document_paths:
-                logger.info(f"Processing document: {doc_path}")
+            # Use enhanced document processor if evaluations are enabled
+            if enable_evaluations:
+                from data.enhanced_document_processor import EnhancedDocumentProcessor
                 
-                result = self.indexing_pipeline.run({
-                    "converter": {"sources": [doc_path]}
-                })
+                enhanced_processor = EnhancedDocumentProcessor(
+                    chunk_size=self.config['document_processing']['chunk_size'],
+                    chunk_overlap=self.config['document_processing']['chunk_overlap'],
+                    enable_evaluations=True,
+                    quality_threshold=0.7
+                )
                 
-                docs_written = len(result["writer"]["documents_written"])
-                total_docs += docs_written
-                results.append({
-                    "path": doc_path,
-                    "chunks_created": docs_written
-                })
+                # Process documents with evaluations
+                processing_result = enhanced_processor.process_documents_with_evaluation(
+                    document_paths, optimize_chunks=True
+                )
                 
-                logger.info(f"Indexed {docs_written} chunks from {doc_path}")
-            
-            logger.info(f"Document indexing completed. Total chunks: {total_docs}")
-            
-            return {
-                "success": True,
-                "total_documents": len(document_paths),
-                "total_chunks": total_docs,
-                "results": results
-            }
+                # Convert to Haystack documents
+                haystack_documents = []
+                for chunk in processing_result.chunks:
+                    from haystack import Document
+                    haystack_doc = Document(
+                        content=chunk['content'],
+                        meta=chunk['meta']
+                    )
+                    haystack_documents.append(haystack_doc)
+                
+                # Use the enhanced documents for indexing
+                results = []
+                total_docs = 0
+                
+                # Index the enhanced documents
+                for i, doc in enumerate(haystack_documents):
+                    result = self.indexing_pipeline.run({
+                        "converter": {"sources": [f"enhanced_doc_{i}"]}
+                    })
+                    
+                    docs_written = len(result["writer"]["documents_written"])
+                    total_docs += docs_written
+                
+                # Include evaluation results
+                indexing_results = {
+                    "success": True,
+                    "total_documents": len(document_paths),
+                    "total_chunks": total_docs,
+                    "evaluation_time": processing_result.evaluation_time,
+                    "processing_time": processing_result.processing_time,
+                    "chunking_quality": processing_result.chunking_metrics.overall_chunk_quality if processing_result.chunking_metrics else None,
+                    "processing_quality": processing_result.processing_metrics.overall_processing_quality if processing_result.processing_metrics else None,
+                    "quality_metrics": enhanced_processor.get_quality_metrics(),
+                    "results": [{"path": path, "chunks_created": total_docs // len(document_paths)} for path in document_paths]
+                }
+                
+                logger.info(f"Document indexing completed with evaluations. Total chunks: {total_docs}")
+                logger.info(f"Chunking quality: {indexing_results['chunking_quality']:.3f}, Processing quality: {indexing_results['processing_quality']:.3f}")
+                return indexing_results
+                
+            else:
+                # Use standard indexing without evaluations
+                results = []
+                total_docs = 0
+                
+                for doc_path in document_paths:
+                    logger.info(f"Processing document: {doc_path}")
+                    
+                    result = self.indexing_pipeline.run({
+                        "converter": {"sources": [doc_path]}
+                    })
+                    
+                    docs_written = len(result["writer"]["documents_written"])
+                    total_docs += docs_written
+                    results.append({
+                        "path": doc_path,
+                        "chunks_created": docs_written
+                    })
+                    
+                    logger.info(f"Indexed {docs_written} chunks from {doc_path}")
+                
+                logger.info(f"Document indexing completed. Total chunks: {total_docs}")
+                
+                return {
+                    "success": True,
+                    "total_documents": len(document_paths),
+                    "total_chunks": total_docs,
+                    "evaluation_time": 0.0,
+                    "processing_time": 0.0,
+                    "chunking_quality": None,
+                    "processing_quality": None,
+                    "quality_metrics": None,
+                    "results": results
+                }
             
         except Exception as e:
             logger.error(f"Document indexing failed: {e}")
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "total_documents": 0,
+                "total_chunks": 0,
+                "evaluation_time": 0.0,
+                "processing_time": 0.0,
+                "chunking_quality": None,
+                "processing_quality": None,
+                "quality_metrics": None
             }
     
     def query(self, question: str) -> RAGResponse:

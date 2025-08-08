@@ -159,6 +159,62 @@ class RAGDashboard:
                 "🎯"
             )
         
+        # Chunking evaluation metrics if available
+        if "steps" in latest_results and "indexing" in latest_results["steps"]:
+            indexing_results = latest_results["steps"]["indexing"]
+            if indexing_results.get("chunking_quality") is not None:
+                st.subheader("🔍 Chunking Evaluation Metrics")
+                
+                chunk_col1, chunk_col2, chunk_col3, chunk_col4 = st.columns(4)
+                
+                with chunk_col1:
+                    self._render_metric_card(
+                        "Chunking Quality",
+                        f"{indexing_results.get('chunking_quality', 0):.3f}",
+                        "📄"
+                    )
+                
+                with chunk_col2:
+                    self._render_metric_card(
+                        "Processing Quality",
+                        f"{indexing_results.get('processing_quality', 0):.3f}",
+                        "🔧"
+                    )
+                
+                with chunk_col3:
+                    self._render_metric_card(
+                        "Total Chunks",
+                        indexing_results.get('total_chunks', 0),
+                        "📊"
+                    )
+                
+                with chunk_col4:
+                    self._render_metric_card(
+                        "Evaluation Time",
+                        f"{indexing_results.get('evaluation_time', 0):.2f}s",
+                        "⏱️"
+                    )
+                
+                # Detailed chunking metrics
+                if "quality_metrics" in indexing_results and indexing_results["quality_metrics"]:
+                    quality_metrics = indexing_results["quality_metrics"]
+                    if "chunking" in quality_metrics:
+                        st.subheader("📊 Detailed Chunking Metrics")
+                        chunk_details = quality_metrics["chunking"]
+                        
+                        detail_col1, detail_col2, detail_col3 = st.columns(3)
+                        with detail_col1:
+                            st.metric("Coherence", f"{chunk_details.get('coherence', 0):.3f}")
+                            st.metric("Completeness", f"{chunk_details.get('completeness', 0):.3f}")
+                        
+                        with detail_col2:
+                            st.metric("Overlap Quality", f"{chunk_details.get('overlap_quality', 0):.3f}")
+                            st.metric("Size Consistency", f"{chunk_details.get('size_consistency', 0):.3f}")
+                        
+                        with detail_col3:
+                            st.metric("Semantic Boundaries", f"{chunk_details.get('semantic_boundaries', 0):.3f}")
+                            st.metric("Overall Quality", f"{chunk_details.get('overall', 0):.3f}")
+        
         # Component scores chart
         st.subheader("Component Performance")
         self._render_component_scores_chart(latest_results)

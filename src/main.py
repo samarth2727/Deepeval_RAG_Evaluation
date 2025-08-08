@@ -101,14 +101,20 @@ class RAGEvaluationPipeline:
         }
         
         try:
-            # Step 1: Index documents into RAG system
+            # Step 1: Index documents into RAG system with evaluations
             if document_paths:
-                logger.info("Step 1: Indexing documents...")
-                indexing_results = self.rag_system.index_documents(document_paths)
+                logger.info("Step 1: Indexing documents with chunking evaluations...")
+                indexing_results = self.rag_system.index_documents(document_paths, enable_evaluations=True)
                 results["steps"]["indexing"] = indexing_results
                 
                 if not indexing_results.get("success", False):
                     raise Exception("Document indexing failed")
+                
+                # Log chunking evaluation results
+                if indexing_results.get("chunking_quality") is not None:
+                    logger.info(f"Chunking quality: {indexing_results['chunking_quality']:.3f}")
+                    logger.info(f"Processing quality: {indexing_results['processing_quality']:.3f}")
+                    logger.info(f"Evaluation time: {indexing_results['evaluation_time']:.2f}s")
             else:
                 logger.info("Step 1: Skipping document indexing (no documents provided)")
                 # Create sample documents for demonstration
@@ -116,7 +122,7 @@ class RAGEvaluationPipeline:
                 self._save_sample_documents(sample_docs)
                 indexing_results = self.rag_system.index_documents([
                     "data/sample_doc1.txt", "data/sample_doc2.txt", "data/sample_doc3.txt"
-                ])
+                ], enable_evaluations=True)
                 results["steps"]["indexing"] = indexing_results
             
             # Step 2: Prepare test dataset
@@ -223,13 +229,15 @@ class RAGEvaluationPipeline:
         return llm_test_cases
     
     def _generate_evaluation_summary(self, evaluation_results: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate summary of evaluation results"""
+        """Generate summary of evaluation results including chunking metrics"""
         summary = {
             "components_evaluated": list(evaluation_results.keys()),
             "total_test_cases": 0,
             "total_execution_time": 0,
             "component_scores": {},
-            "overall_performance": {}
+            "overall_performance": {},
+            "chunking_evaluation": {},
+            "processing_evaluation": {}
         }
         
         all_scores = []
@@ -365,6 +373,18 @@ def main():
     # Print summary
     if results.get("success"):
         print("\n🎉 Evaluation completed successfully!")
+        
+        # Print chunking evaluation results if available
+        if "steps" in results and "indexing" in results["steps"]:
+            indexing_results = results["steps"]["indexing"]
+            if indexing_results.get("chunking_quality") is not None:
+                print(f"\n🔍 Chunking Evaluation Results:")
+                print(f"  Chunking Quality: {indexing_results['chunking_quality']:.3f}")
+                print(f"  Processing Quality: {indexing_results['processing_quality']:.3f}")
+                print(f"  Evaluation Time: {indexing_results['evaluation_time']:.2f}s")
+                print(f"  Processing Time: {indexing_results['processing_time']:.2f}s")
+                print(f"  Total Chunks: {indexing_results['total_chunks']}")
+                print(f"  Avg Chunks per Doc: {indexing_results['average_chunks_per_doc']:.1f}")
         
         if "summary" in results:
             summary = results["summary"]
