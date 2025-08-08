@@ -1,6 +1,6 @@
 """
 DeepEval Evaluation Framework Module
-Comprehensive RAG evaluation with 14+ metrics and component-level analysis
+Comprehensive RAG evaluation with 13 specialized metrics and component-level analysis
 """
 
 from .deepeval_framework import DeepEvalFramework

@@ -52,7 +52,7 @@ class DeepEvalFramework:
     
     Features:
     - Component-level evaluation (retriever + generator)
-    - 14+ evaluation metrics
+    - 13 specialized evaluation metrics
     - Synthetic data generation
     - Batch evaluation processing
     - Comprehensive reporting

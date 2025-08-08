@@ -351,13 +351,20 @@ class MetricsManager:
     
     def get_metrics_info(self) -> Dict[str, Any]:
         """Get information about all available metrics"""
+        retriever_metrics = self.retriever_metrics.get_all_metrics()
+        generator_metrics = self.generator_metrics.get_all_metrics()
+        total_metrics = len(retriever_metrics) + len(generator_metrics)
+        
         return {
             'retriever_metrics': self.retriever_metrics.get_metric_descriptions(),
             'generator_metrics': self.generator_metrics.get_metric_descriptions(),
-            'total_metrics': (
-                len(self.retriever_metrics.get_all_metrics()) +
-                len(self.generator_metrics.get_all_metrics())
-            )
+            'total_metrics': total_metrics,
+            'metric_breakdown': {
+                'retriever': len(retriever_metrics),
+                'generator': len(generator_metrics),
+                'chunking_evaluation': 8,  # 8 chunking evaluation metrics
+                'total_with_chunking': total_metrics + 8
+            }
         }
     
     def validate_metrics_config(self) -> Dict[str, Any]:

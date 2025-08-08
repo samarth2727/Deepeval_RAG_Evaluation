@@ -6,7 +6,7 @@
 [![DeepEval](https://img.shields.io/badge/DeepEval-0.21%2B-purple.svg)](https://docs.confident-ai.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green.svg)](https://openai.com)
 
-A comprehensive **production-ready** RAG (Retrieval-Augmented Generation) evaluation system using **DeepEval framework** with **specialized metrics**, **OpenAI GPT-4o-mini**, and automated **CI/CD pipeline** for continuous quality assurance.
+A comprehensive **production-ready** RAG (Retrieval-Augmented Generation) evaluation system using **DeepEval framework** with **13 specialized metrics**, **OpenAI GPT-4o-mini**, and automated **CI/CD pipeline** for continuous quality assurance.
 
 ## Architecture
 
@@ -52,7 +52,7 @@ graph TB
 - **In-Memory Vector Store**: Cosine similarity search, real-time indexing
 - **OpenAI GPT-4o-mini**: Temperature 0.1, max 512 tokens
 - **RAG System**: Query processing and response generation
-- **DeepEval Framework**: Component-level evaluation with 14+ metrics
+- **DeepEval Framework**: Component-level evaluation with 13 specialized metrics
 - **Chunking Evaluator**: Real-time chunking quality assessment
   - Chunk coherence and completeness evaluation
   - Overlap quality and size consistency monitoring
@@ -84,6 +84,18 @@ graph TB
 - **Text Cleanliness**: Evaluates text formatting and processing quality
 - **Content Preservation**: Ensures original meaning is maintained during processing
 - **Metadata Quality**: Assesses completeness and accuracy of chunk metadata
+
+###  **Complete Metrics Summary**
+**Total: 13 Specialized Metrics**
+
+**Retriever Metrics (3):**
+- Contextual Relevancy, Contextual Recall, Contextual Precision
+
+**Generator Metrics (2):**
+- Answer Correctness, Citation Accuracy
+
+**Chunking Evaluation Metrics (8):**
+- Chunk Coherence, Chunk Completeness, Overlap Quality, Size Consistency, Semantic Boundaries, Text Cleanliness, Content Preservation, Metadata Quality
 
 ###  **Advanced Features**
 - **Synthetic Data Generation**: DeepEval Synthesizer creates additional test cases

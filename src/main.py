@@ -1,6 +1,7 @@
 """
 Main RAG Evaluation Application
 Orchestrates the complete evaluation pipeline from RAG system to DeepEval metrics
+Evaluates RAG systems using 13 specialized metrics across retriever, generator, and chunking components
 """
 
 import os
