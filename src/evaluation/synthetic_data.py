@@ -32,7 +32,7 @@ class SyntheticDataGenerator:
     - Batch generation
     """
     
-    def __init__(self, model: str = "gpt-4"):
+    def __init__(self, model: str = "gpt-4o-mini"):
         """
         Initialize synthetic data generator
         

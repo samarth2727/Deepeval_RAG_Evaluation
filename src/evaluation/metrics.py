@@ -152,13 +152,13 @@ class RetrieverMetrics:
     Implements contextual relevancy, recall, and precision
     """
     
-    def __init__(self, config: Dict[str, Any], model: str = "gpt-4"):
+    def __init__(self, config: Dict[str, Any], model: str = "gpt-4o-mini"):
         """
         Initialize retriever metrics
         
         Args:
             config: Configuration for retriever metrics
-            model: Model to use for evaluation
+            model: Model to use for evaluation (default: gpt-4o-mini)
         """
         self.config = config
         self.model = model
@@ -222,13 +222,13 @@ class GeneratorMetrics:
     Implements answer correctness and citation accuracy
     """
     
-    def __init__(self, config: Dict[str, Any], model: str = "gpt-4"):
+    def __init__(self, config: Dict[str, Any], model: str = "gpt-4o-mini"):
         """
         Initialize generator metrics
         
         Args:
             config: Configuration for generator metrics
-            model: Model to use for evaluation
+            model: Model to use for evaluation (default: gpt-4o-mini)
         """
         self.config = config
         self.model = model
@@ -328,7 +328,7 @@ class MetricsManager:
             config: Complete evaluation configuration
         """
         self.config = config
-        self.model = config.get('evaluation', {}).get('model', 'gpt-4')
+        self.model = config.get('evaluation', {}).get('model', 'gpt-4o-mini')  # Changed default to valid model
         
         # Initialize component metrics
         self.retriever_metrics = RetrieverMetrics(

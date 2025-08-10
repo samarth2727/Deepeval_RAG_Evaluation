@@ -12,13 +12,26 @@ from pathlib import Path
 from typing import List, Dict, Any
 import time
 
-# Add src to path for imports
-sys.path.append(str(Path(__file__).parent))
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ Environment variables loaded from .env file")
+except ImportError:
+    print("⚠️  python-dotenv not installed. Install with: pip install python-dotenv")
+    print("   Environment variables must be set manually.")
 
-from rag.rag_system import RAGSystem
-from evaluation.deepeval_framework import DeepEvalFramework
-from evaluation.test_cases import TestCaseGenerator
-from data.dataset_manager import DatasetManager
+# Add src to path for imports - fix the path handling
+current_dir = Path(__file__).parent
+project_root = current_dir.parent
+sys.path.insert(0, str(current_dir))
+sys.path.insert(0, str(project_root))
+
+# Now import using absolute imports
+from src.rag.rag_system import RAGSystem
+from src.evaluation.deepeval_framework import DeepEvalFramework
+from src.evaluation.test_cases import TestCaseGenerator
+from src.data.dataset_manager import DatasetManager
 
 # Setup logging
 logging.basicConfig(
@@ -64,6 +77,14 @@ class RAGEvaluationPipeline:
         self.eval_framework = DeepEvalFramework(eval_config_path)
         self.test_generator = TestCaseGenerator()
         self.dataset_manager = DatasetManager()
+        
+        # Verify RAG system initialization
+        try:
+            system_info = self.rag_system.get_system_info()
+            logger.info(f"RAG system initialized successfully: {system_info['model']}")
+        except Exception as e:
+            logger.error(f"RAG system initialization failed: {e}")
+            raise Exception(f"Failed to initialize RAG system: {e}")
         
         logger.info("RAG evaluation pipeline initialized successfully")
     
@@ -117,14 +138,26 @@ class RAGEvaluationPipeline:
                     logger.info(f"Processing quality: {indexing_results['processing_quality']:.3f}")
                     logger.info(f"Evaluation time: {indexing_results['evaluation_time']:.2f}s")
             else:
-                logger.info("Step 1: Skipping document indexing (no documents provided)")
+                logger.info("Step 1: Creating and indexing sample documents...")
                 # Create sample documents for demonstration
                 sample_docs = self._create_sample_documents()
                 self._save_sample_documents(sample_docs)
-                indexing_results = self.rag_system.index_documents([
+                
+                # Index the sample documents
+                sample_paths = [
                     "data/sample_doc1.txt", "data/sample_doc2.txt", "data/sample_doc3.txt"
-                ], enable_evaluations=True)
+                ]
+                indexing_results = self.rag_system.index_documents(sample_paths, enable_evaluations=True)
                 results["steps"]["indexing"] = indexing_results
+                
+                if not indexing_results.get("success", False):
+                    raise Exception("Sample document indexing failed")
+                
+                # Log chunking evaluation results
+                if indexing_results.get("chunking_quality") is not None:
+                    logger.info(f"Sample documents chunking quality: {indexing_results['chunking_quality']:.3f}")
+                    logger.info(f"Sample documents processing quality: {indexing_results['processing_quality']:.3f}")
+                    logger.info(f"Sample documents evaluation time: {indexing_results['evaluation_time']:.2f}s")
             
             # Step 2: Prepare test dataset
             logger.info("Step 2: Preparing test dataset...")
@@ -248,24 +281,40 @@ class RAGEvaluationPipeline:
                 summary["total_test_cases"] = max(summary["total_test_cases"], results.test_cases_count)
                 summary["total_execution_time"] += results.execution_time
                 
-                # Extract scores
+                # Extract scores with better error handling
                 component_scores = {}
-                for metric, scores in results.aggregate_scores.items():
-                    if isinstance(scores, dict) and 'average' in scores:
-                        component_scores[metric] = scores['average']
-                        all_scores.append(scores['average'])
+                if hasattr(results, 'aggregate_scores') and results.aggregate_scores:
+                    for metric, scores in results.aggregate_scores.items():
+                        if isinstance(scores, dict) and 'average' in scores:
+                            score_value = scores['average']
+                            if score_value > 0:  # Only include non-zero scores
+                                component_scores[metric] = score_value
+                                all_scores.append(score_value)
+                        elif isinstance(scores, (int, float)):
+                            if scores > 0:  # Only include non-zero scores
+                                component_scores[metric] = float(scores)
+                                all_scores.append(float(scores))
                 
                 summary["component_scores"][component] = component_scores
         
         # Calculate overall performance
         if all_scores:
+            average_score = sum(all_scores) / len(all_scores)
             summary["overall_performance"] = {
-                "average_score": sum(all_scores) / len(all_scores),
+                "average_score": average_score,
                 "min_score": min(all_scores),
                 "max_score": max(all_scores),
-                "performance_grade": "Excellent" if sum(all_scores) / len(all_scores) >= 0.8 
-                                   else "Good" if sum(all_scores) / len(all_scores) >= 0.6
+                "performance_grade": "Excellent" if average_score >= 0.8 
+                                   else "Good" if average_score >= 0.6
                                    else "Needs Improvement"
+            }
+        else:
+            # If no scores found, set default values
+            summary["overall_performance"] = {
+                "average_score": 0.0,
+                "min_score": 0.0,
+                "max_score": 0.0,
+                "performance_grade": "No Data"
             }
         
         return summary
@@ -341,13 +390,43 @@ class RAGEvaluationPipeline:
     def _make_serializable(self, obj):
         """Make object JSON serializable"""
         if hasattr(obj, '__dict__'):
-            return obj.__dict__
+            # Handle DeepEval TestResult objects
+            if hasattr(obj, 'test_case') and hasattr(obj, 'metrics_metadata'):
+                return {
+                    'test_case': {
+                        'input': getattr(obj.test_case, 'input', ''),
+                        'actual_output': getattr(obj.test_case, 'actual_output', ''),
+                        'expected_output': getattr(obj.test_case, 'expected_output', ''),
+                        'context': getattr(obj.test_case, 'context', ''),
+                        'retrieval_context': getattr(obj.test_case, 'retrieval_context', [])
+                    },
+                    'metrics_metadata': [
+                        {
+                            'metric': getattr(metric, 'metric', ''),
+                            'score': getattr(metric, 'score', 0.0),
+                            'reason': getattr(metric, 'reason', ''),
+                            'threshold': getattr(metric, 'threshold', 0.0),
+                            'strict': getattr(metric, 'strict', False)
+                        } for metric in obj.metrics_metadata
+                    ] if hasattr(obj, 'metrics_metadata') else []
+                }
+            # Handle other objects with __dict__
+            try:
+                return {k: self._make_serializable(v) for k, v in obj.__dict__.items()}
+            except:
+                return str(obj)
         elif isinstance(obj, dict):
             return {k: self._make_serializable(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [self._make_serializable(item) for item in obj]
-        else:
+        elif isinstance(obj, (str, int, float, bool, type(None))):
             return obj
+        else:
+            # For any other type, convert to string
+            try:
+                return str(obj)
+            except:
+                return f"<non-serializable object of type {type(obj).__name__}>"
 
 
 def main():
@@ -373,23 +452,26 @@ def main():
     
     # Print summary
     if results.get("success"):
-        print("\n🎉 Evaluation completed successfully!")
+        print("\nEvaluation completed successfully!")
         
         # Print chunking evaluation results if available
         if "steps" in results and "indexing" in results["steps"]:
             indexing_results = results["steps"]["indexing"]
             if indexing_results.get("chunking_quality") is not None:
-                print(f"\n🔍 Chunking Evaluation Results:")
+                print(f"\nChunking Evaluation Results:")
                 print(f"  Chunking Quality: {indexing_results['chunking_quality']:.3f}")
                 print(f"  Processing Quality: {indexing_results['processing_quality']:.3f}")
                 print(f"  Evaluation Time: {indexing_results['evaluation_time']:.2f}s")
                 print(f"  Processing Time: {indexing_results['processing_time']:.2f}s")
                 print(f"  Total Chunks: {indexing_results['total_chunks']}")
-                print(f"  Avg Chunks per Doc: {indexing_results['average_chunks_per_doc']:.1f}")
+                # Calculate average chunks per doc if we have the data
+                total_docs = indexing_results.get('total_documents', 1)
+                avg_chunks = indexing_results['total_chunks'] / total_docs if total_docs > 0 else 0
+                print(f"  Avg Chunks per Doc: {avg_chunks:.1f}")
         
         if "summary" in results:
             summary = results["summary"]
-            print(f"\n📊 Evaluation Summary:")
+            print(f"\nEvaluation Summary:")
             print(f"Components Evaluated: {', '.join(summary['components_evaluated'])}")
             print(f"Total Test Cases: {summary['total_test_cases']}")
             print(f"Execution Time: {summary['total_execution_time']:.2f}s")
@@ -399,13 +481,13 @@ def main():
                 print(f"Overall Score: {perf['average_score']:.3f}")
                 print(f"Performance Grade: {perf['performance_grade']}")
             
-            print(f"\n📈 Component Scores:")
+            print(f"\nComponent Scores:")
             for component, scores in summary.get("component_scores", {}).items():
                 print(f"  {component.title()}:")
                 for metric, score in scores.items():
                     print(f"    {metric}: {score:.3f}")
     else:
-        print(f"\n❌ Evaluation failed: {results.get('error', 'Unknown error')}")
+        print(f"\nEvaluation failed: {results.get('error', 'Unknown error')}")
     
     return results
 

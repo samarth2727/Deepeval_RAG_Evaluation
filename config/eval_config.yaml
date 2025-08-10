@@ -2,7 +2,7 @@
 
 # General Settings
 evaluation:
-  model: "gpt-4"
+  model: "gpt-4o-mini"
   max_test_cases_per_run: 100
   timeout_per_test_case: 60
   parallel_execution: true
@@ -13,17 +13,17 @@ retriever_metrics:
   contextual_relevancy:
     enabled: true
     threshold: 0.7
-    model: "gpt-4"
+    model: "gpt-4o-mini"
     
   contextual_recall:
     enabled: true
     threshold: 0.7
-    model: "gpt-4"
+    model: "gpt-4o-mini"
     
   contextual_precision:
     enabled: true
     threshold: 0.7
-    model: "gpt-4"
+    model: "gpt-4o-mini"
 
 # Generator Metrics (Custom GEval)
 generator_metrics:
@@ -35,7 +35,7 @@ generator_metrics:
       - "Check if the answer directly addresses the question"
       - "Verify factual accuracy against the retrieved context"
       - "Assess completeness of the response"
-    model: "gpt-4"
+    model: "gpt-4o-mini"
     
   citation_accuracy:
     enabled: true
@@ -45,7 +45,7 @@ generator_metrics:
       - "Verify that cited sources exist in the retrieved context"
       - "Check if citations are properly formatted"
       - "Assess relevance of cited content to the answer"
-    model: "gpt-4"
+    model: "gpt-4o-mini"
 
 # Dataset Configuration
 datasets:

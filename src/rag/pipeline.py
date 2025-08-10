@@ -1,23 +1,24 @@
 """
-RAG Pipeline Management and Orchestration
-Handles the complete RAG workflow from indexing to query processing
+RAG Pipeline Implementation
+Custom pipeline components for Haystack integration
 """
 
-import time
-import uuid
-from typing import List, Dict, Any, Optional, Tuple
 import logging
-from dataclasses import dataclass, asdict
+from typing import List, Dict, Any, Optional
 from pathlib import Path
+from dataclasses import dataclass
 
 from haystack import Pipeline
 from haystack.components.embedders import SentenceTransformersTextEmbedder
+from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
+from haystack.components.builders import PromptBuilder
 from haystack.components.preprocessors import DocumentSplitter
 from haystack.components.converters import TextFileToDocument
 from haystack.components.writers import DocumentWriter
-from haystack.components.builders import PromptBuilder
+from haystack.document_stores.in_memory import InMemoryDocumentStore
 
-from .components import OpenAIGenerator, DocumentProcessor
+# Use absolute imports instead of relative imports
+from src.rag.components import OpenAIGenerator, DocumentProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,6 @@ class RAGPipeline:
     def _initialize_components(self):
         """Initialize pipeline components"""
         from haystack.components.embedders import SentenceTransformersDocumentEmbedder
-        from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
         
         # Embedding components
         self.document_embedder = SentenceTransformersDocumentEmbedder(

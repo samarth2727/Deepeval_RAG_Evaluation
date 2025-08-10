@@ -1,16 +1,17 @@
 """
-Enhanced Document Processor with Integrated Evaluations
-Integrates chunking and processing evaluations during document processing
+Enhanced Document Processor with Evaluation Integration
+Combines document processing with chunking evaluation metrics
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 import time
 from dataclasses import dataclass
 
-from .document_processor import DocumentProcessor
-from ..evaluation.chunking_evaluator import ChunkingEvaluator, ChunkingMetrics, ProcessingMetrics
+# Use absolute imports instead of relative imports
+from src.data.document_processor import DocumentProcessor
+from src.evaluation.chunking_evaluator import ChunkingEvaluator, ChunkingMetrics, ProcessingMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class EnhancedDocumentProcessor:
         chunk_size: int = 500,
         chunk_overlap: int = 50,
         enable_evaluations: bool = True,
-        evaluation_model: str = "gpt-4",
+        evaluation_model: str = "gpt-4o-mini",
         quality_threshold: float = 0.7
     ):
         """

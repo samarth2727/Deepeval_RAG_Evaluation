@@ -199,7 +199,26 @@ streamlit run src/dashboard.py --server.port 8502
 
 # Launch in headless mode
 streamlit run src/dashboard.py --server.headless true
+
+# Launch with external access (for remote servers)
+streamlit run src/dashboard.py --server.address 0.0.0.0
+
+# Launch with custom configuration
+streamlit run src/dashboard.py --server.port 8502 --server.headless true
 ```
+
+### **Dashboard Features**
+- **📊 Overview**: Real-time evaluation metrics and chunking quality scores
+- **🔍 Chunking Metrics**: Live chunking evaluation results with detailed breakdowns
+- **📈 Component Analysis**: Retriever vs Generator performance comparison
+- **📊 Historical Trends**: Performance tracking over time with visualizations
+- **🔧 System Health**: Processing efficiency and error monitoring
+- **🧪 Run Evaluation**: Interactive evaluation runner with custom parameters
+
+### **Dashboard Access**
+- **Local Access**: http://localhost:8501
+- **Network Access**: http://your-ip:8501 (with --server.address 0.0.0.0)
+- **Default Port**: 8501 (configurable with --server.port)
 
 ### **Expected Output with Chunking Evaluations**
 ```bash
@@ -284,7 +303,7 @@ vector_db:
 ### Evaluation Configuration (`config/eval_config.yaml`)
 ```yaml
 evaluation:
-  model: "gpt-4"
+  model: "gpt-4o-mini"
   max_test_cases: 100
   
 retriever_metrics:

@@ -25,7 +25,7 @@ class TestEvaluationConfig:
         """Test default configuration values"""
         config = EvaluationConfig()
         
-        assert config.model == "gpt-4"
+        assert config.model == "gpt-4o-mini"
         assert config.max_test_cases_per_run == 100
         assert config.parallel_execution is True
         assert "html" in config.output_format
@@ -57,7 +57,7 @@ class TestRetrieverMetrics:
         
         metrics = RetrieverMetrics(config)
         assert metrics.config == config
-        assert metrics.model == "gpt-4"
+        assert metrics.model == "gpt-4o-mini"
     
     def test_get_all_metrics(self):
         """Test getting all enabled metrics"""
@@ -230,7 +230,7 @@ class TestSyntheticDataGenerator:
     def test_initialization(self):
         """Test synthetic data generator initialization"""
         generator = SyntheticDataGenerator()
-        assert generator.model == "gpt-4"
+        assert generator.model == "gpt-4o-mini"
     
     def test_fallback_generation(self):
         """Test fallback synthetic generation"""
@@ -291,7 +291,7 @@ class TestEvaluationResults:
             individual_results=[],
             execution_time=5.0,
             timestamp=1234567890,
-            config={"model": "gpt-4"}
+            config={"model": "gpt-4o-mini"}
         )
         
         assert results.component == "retriever"
@@ -307,7 +307,7 @@ class TestEvaluationResults:
             individual_results=[],
             execution_time=3.0,
             timestamp=1234567890,
-            config={"model": "gpt-4"}
+            config={"model": "gpt-4o-mini"}
         )
         
         with tempfile.TemporaryDirectory() as temp_dir:

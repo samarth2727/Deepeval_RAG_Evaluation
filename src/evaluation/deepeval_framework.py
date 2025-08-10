@@ -11,6 +11,13 @@ from dataclasses import dataclass, asdict
 import time
 from pathlib import Path
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # Continue without dotenv if not installed
+
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import (
@@ -21,9 +28,10 @@ from deepeval.metrics import (
 )
 from deepeval import evaluate
 
-from .metrics import RetrieverMetrics, GeneratorMetrics, EvaluationResults
-from .test_cases import TestCaseGenerator, RAGTestCase
-from .synthetic_data import SyntheticDataGenerator
+# Use absolute imports instead of relative imports
+from src.evaluation.metrics import RetrieverMetrics, GeneratorMetrics, EvaluationResults
+from src.evaluation.test_cases import TestCaseGenerator, RAGTestCase
+from src.evaluation.synthetic_data import SyntheticDataGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +39,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EvaluationConfig:
     """Configuration for DeepEval framework"""
-    model: str = "gpt-4"
+    model: str = "gpt-4o-mini"  # Changed from "gpt-4" to valid model
     max_test_cases_per_run: int = 100
     timeout_per_test_case: int = 60
     parallel_execution: bool = True
@@ -348,15 +356,83 @@ class DeepEvalFramework:
         aggregate_scores = {}
         
         try:
+            # Create a mapping of metric names
+            metric_names = [metric.__class__.__name__ for metric in metrics]
+            logger.info(f"Looking for metrics: {metric_names}")
+            
+            # Create a mapping from DeepEval metric names to our metric names
+            metric_mapping = {
+                'Answer Correctness [GEval]': 'GEval',
+                'Citation Accuracy [GEval]': 'GEval',
+                'Contextual Relevancy': 'ContextualRelevancyMetric',
+                'Contextual Recall': 'ContextualRecallMetric',
+                'Contextual Precision': 'ContextualPrecisionMetric'
+            }
+            
             for metric in metrics:
                 metric_name = metric.__class__.__name__
                 scores = []
                 
                 for result in results:
+                    logger.info(f"Processing result: {type(result)}")
+                    
+                    # Handle different result types
                     if hasattr(result, 'metrics_metadata'):
-                        for metric_result in result.metrics_metadata:
-                            if metric_result.metric == metric_name:
-                                scores.append(metric_result.score)
+                        # Object with metrics_metadata
+                        logger.info(f"Result has metrics_metadata: {len(result.metrics_metadata)} items")
+                        for i, metric_result in enumerate(result.metrics_metadata):
+                            logger.info(f"Metric {i}: {metric_result.metric} (type: {type(metric_result.metric)})")
+                            if hasattr(metric_result, 'score'):
+                                logger.info(f"  Score: {metric_result.score}")
+                            else:
+                                logger.info(f"  No score attribute")
+                            
+                            # Check if this metric result matches our metric
+                            if (metric_result.metric == metric_name or 
+                                metric_result.metric in metric_mapping and metric_mapping[metric_result.metric] == metric_name or
+                                metric_result.metric.startswith(metric_name) or
+                                metric_name in metric_result.metric):
+                                if hasattr(metric_result, 'score') and metric_result.score is not None:
+                                    scores.append(metric_result.score)
+                                    logger.info(f"Found score for {metric_name} (from {metric_result.metric}): {metric_result.score}")
+                    elif isinstance(result, tuple):
+                        # Tuple result from DeepEval
+                        logger.info(f"Processing tuple result with {len(result)} items")
+                        for i, item in enumerate(result):
+                            logger.info(f"Tuple item {i}: {type(item)} - {item}")
+                            
+                            # Handle TestResult objects with metrics_data
+                            if hasattr(item, 'metrics_data') and item.metrics_data:
+                                logger.info(f"Found TestResult with {len(item.metrics_data)} metrics")
+                                for metric_data in item.metrics_data:
+                                    if hasattr(metric_data, 'name') and hasattr(metric_data, 'score'):
+                                        metric_name_from_data = metric_data.name
+                                        metric_score = metric_data.score
+                                        logger.info(f"Found metric: {metric_name_from_data} = {metric_score}")
+                                        
+                                        # Check if this matches our metric
+                                        if (metric_name_from_data == metric_name or 
+                                            metric_name_from_data in metric_mapping and metric_mapping[metric_name_from_data] == metric_name or
+                                            metric_name_from_data.startswith(metric_name) or
+                                            metric_name in metric_name_from_data):
+                                            scores.append(metric_score)
+                                            logger.info(f"Found score for {metric_name} (from {metric_name_from_data}): {metric_score}")
+                            
+                            # Handle direct score attributes
+                            elif hasattr(item, 'score') and item.score is not None:
+                                # Extract metric name from the item
+                                metric_name_from_item = getattr(item, 'metric', str(type(item)))
+                                logger.info(f"Found score in tuple item: {metric_name_from_item} = {item.score}")
+                                
+                                # Check if this matches our metric
+                                if (metric_name_from_item == metric_name or 
+                                    metric_name_from_item in metric_mapping and metric_mapping[metric_name_from_item] == metric_name or
+                                    metric_name_from_item.startswith(metric_name) or
+                                    metric_name in metric_name_from_item):
+                                    scores.append(item.score)
+                                    logger.info(f"Found score for {metric_name} (from {metric_name_from_item}): {item.score}")
+                    else:
+                        logger.info(f"Result does not have metrics_metadata attribute and is not a tuple")
                 
                 if scores:
                     aggregate_scores[metric_name] = {
@@ -365,6 +441,7 @@ class DeepEvalFramework:
                         'max': max(scores),
                         'count': len(scores)
                     }
+                    logger.info(f"Aggregate scores for {metric_name}: {aggregate_scores[metric_name]}")
                 else:
                     aggregate_scores[metric_name] = {
                         'average': 0.0,
@@ -372,9 +449,12 @@ class DeepEvalFramework:
                         'max': 0.0,
                         'count': 0
                     }
+                    logger.warning(f"No scores found for metric: {metric_name}")
         
         except Exception as e:
             logger.error(f"Error calculating aggregate scores: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
         
         return aggregate_scores
     

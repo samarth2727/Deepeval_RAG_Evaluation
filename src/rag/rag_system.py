@@ -10,6 +10,13 @@ import logging
 from dataclasses import dataclass
 import os
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # Continue without dotenv if not installed
+
 from haystack import Pipeline
 from haystack.components.embedders import SentenceTransformersTextEmbedder, SentenceTransformersDocumentEmbedder
 from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
@@ -20,8 +27,9 @@ from haystack.components.writers import DocumentWriter
 from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack import Document
 
-from .components import OpenAIGenerator, QdrantRetriever
-from .pipeline import RAGPipeline
+# Use absolute imports instead of relative imports
+from src.rag.components import OpenAIGenerator, QdrantRetriever
+from src.rag.pipeline import RAGPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +75,10 @@ class RAGSystem:
         try:
             with open(config_path, 'r') as file:
                 config = yaml.safe_load(file)
+            
+            # Handle environment variable substitution
+            self._substitute_env_vars(config)
+            
             logger.info(f"Configuration loaded from {config_path}")
             return config
         except Exception as e:
@@ -93,6 +105,26 @@ class RAGSystem:
                     'chunk_overlap': 50
                 }
             }
+    
+    def _substitute_env_vars(self, obj):
+        """Recursively substitute environment variables in configuration"""
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
+                    # Extract environment variable name
+                    env_var = value[2:-1]  # Remove ${ and }
+                    env_value = os.getenv(env_var)
+                    if env_value:
+                        obj[key] = env_value
+                        logger.info(f"Substituted {value} with environment variable {env_var}")
+                    else:
+                        logger.warning(f"Environment variable {env_var} not found")
+                elif isinstance(value, (dict, list)):
+                    self._substitute_env_vars(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                if isinstance(item, (dict, list)):
+                    self._substitute_env_vars(item)
     
     def _setup_logging(self):
         """Setup logging configuration"""
@@ -199,7 +231,7 @@ class RAGSystem:
         try:
             # Use enhanced document processor if evaluations are enabled
             if enable_evaluations:
-                from data.enhanced_document_processor import EnhancedDocumentProcessor
+                from src.data.enhanced_document_processor import EnhancedDocumentProcessor
                 
                 enhanced_processor = EnhancedDocumentProcessor(
                     chunk_size=self.config['document_processing']['chunk_size'],
@@ -213,27 +245,51 @@ class RAGSystem:
                     document_paths, optimize_chunks=True
                 )
                 
-                # Convert to Haystack documents
-                haystack_documents = []
-                for chunk in processing_result.chunks:
-                    from haystack import Document
-                    haystack_doc = Document(
-                        content=chunk['content'],
-                        meta=chunk['meta']
-                    )
-                    haystack_documents.append(haystack_doc)
-                
                 # Use the enhanced documents for indexing
                 results = []
                 total_docs = 0
                 
-                # Index the enhanced documents
-                for i, doc in enumerate(haystack_documents):
-                    result = self.indexing_pipeline.run({
-                        "converter": {"sources": [f"enhanced_doc_{i}"]}
+                # Create a simple indexing pipeline for enhanced documents
+                enhanced_indexing_pipeline = Pipeline()
+                # Create new instances of components to avoid sharing
+                new_document_embedder = SentenceTransformersDocumentEmbedder(
+                    model=self.config['embeddings']['model_name'],
+                    batch_size=self.config['embeddings'].get('batch_size', 32)
+                )
+                new_document_writer = DocumentWriter(document_store=self.document_store)
+                enhanced_indexing_pipeline.add_component("embedder", new_document_embedder)
+                enhanced_indexing_pipeline.add_component("writer", new_document_writer)
+                enhanced_indexing_pipeline.connect("embedder", "writer")
+                
+                # Index the enhanced documents directly
+                for chunk in processing_result.chunks:
+                    # Create Haystack document
+                    from haystack import Document
+                    
+                    # Ensure meta exists and is a dictionary
+                    meta = chunk.get('meta', {})
+                    if meta is None:
+                        meta = {}
+                    
+                    haystack_doc = Document(
+                        content=chunk['content'],
+                        meta=meta
+                    )
+                    
+                    # Index the document
+                    result = enhanced_indexing_pipeline.run({
+                        "embedder": {"documents": [haystack_doc]}
                     })
                     
-                    docs_written = len(result["writer"]["documents_written"])
+                    # Handle different result types from writer
+                    writer_result = result["writer"]["documents_written"]
+                    if isinstance(writer_result, (list, tuple)):
+                        docs_written = len(writer_result)
+                    elif isinstance(writer_result, (int, float)):
+                        docs_written = int(writer_result)
+                    else:
+                        docs_written = 1  # Default to 1 if unknown type
+                    
                     total_docs += docs_written
                 
                 # Include evaluation results
@@ -315,15 +371,48 @@ class RAGSystem:
         logger.info(f"Processing query: {question}")
         
         try:
+            # Check if documents are indexed
+            doc_count = self.document_store.count_documents()
+            if doc_count == 0:
+                logger.warning("No documents indexed. Please index documents first.")
+                return RAGResponse(
+                    query=question,
+                    answer="No documents are indexed. Please add documents to the system first.",
+                    retrieved_contexts=[],
+                    retrieval_scores=[],
+                    metadata={"error": "No documents indexed", "doc_count": 0}
+                )
+            
+            logger.info(f"Running pipeline with {doc_count} documents indexed")
+            
             # Run the pipeline
             result = self.pipeline.run({
                 "text_embedder": {"text": question},
                 "prompt_builder": {"query": question}
             })
             
-            # Extract results
+            logger.info(f"Pipeline result keys: {list(result.keys())}")
+            
+            # Extract results with better error handling
+            if "generator" not in result:
+                logger.error(f"Generator not found in pipeline result. Available keys: {list(result.keys())}")
+                return RAGResponse(
+                    query=question,
+                    answer="Error: Generator component not found in pipeline result",
+                    retrieved_contexts=[],
+                    retrieval_scores=[],
+                    metadata={"error": "Generator not found", "available_keys": list(result.keys())}
+                )
+            
+            # Get the answer from generator
             answer = result["generator"]["replies"][0] if result["generator"]["replies"] else "No answer generated"
-            retrieved_docs = result["retriever"]["documents"]
+            
+            # Since retriever and text_embedder are not in the output, we need to get retrieved documents separately
+            # First, get the text embedding
+            text_embedding_result = self.text_embedder.run(text=question)
+            # Then run retrieval with the embedding
+            retrieval_result = self.retriever.run(query_embedding=text_embedding_result["embedding"])
+            retrieved_docs = retrieval_result["documents"]
             
             # Prepare response
             response = RAGResponse(
@@ -334,7 +423,8 @@ class RAGSystem:
                 metadata={
                     "num_retrieved": len(retrieved_docs),
                     "pipeline_run_id": result.get("run_id"),
-                    "model": self.config['llm']['model_name']
+                    "model": self.config['llm']['model_name'],
+                    "doc_count": doc_count
                 }
             )
             
@@ -348,7 +438,7 @@ class RAGSystem:
                 answer=f"Error processing query: {str(e)}",
                 retrieved_contexts=[],
                 retrieval_scores=[],
-                metadata={"error": str(e)}
+                metadata={"error": str(e), "doc_count": self.document_store.count_documents()}
             )
     
     def get_system_info(self) -> Dict[str, Any]:

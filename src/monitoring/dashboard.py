@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 # Setup page config
 st.set_page_config(
     page_title="RAG Evaluation Dashboard",
-    page_icon="🔍",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -48,7 +48,7 @@ class RAGDashboard:
     def run(self):
         """Run the Streamlit dashboard"""
         # Title and header
-        st.title("🔍 RAG Evaluation Dashboard")
+        st.title("RAG Evaluation Dashboard")
         st.markdown("### Production-Ready RAG Evaluation with DeepEval")
         
         # Sidebar
@@ -69,7 +69,7 @@ class RAGDashboard:
         
         # Refresh controls
         st.sidebar.markdown("### Controls")
-        if st.sidebar.button("🔄 Refresh Data"):
+        if st.sidebar.button("Refresh Data"):
             st.rerun()
         
         auto_refresh = st.sidebar.checkbox("Auto-refresh (30s)", value=False)
@@ -118,7 +118,7 @@ class RAGDashboard:
     
     def _render_overview(self):
         """Render overview page with key metrics"""
-        st.header("📊 Evaluation Overview")
+        st.header("Evaluation Overview")
         
         # Load latest evaluation results
         latest_results = self._load_latest_results()
@@ -134,21 +134,21 @@ class RAGDashboard:
             self._render_metric_card(
                 "Overall Score",
                 latest_results.get("summary", {}).get("overall_performance", {}).get("average_score", 0),
-                "📈"
+                ""
             )
         
         with col2:
             self._render_metric_card(
                 "Test Cases",
                 latest_results.get("summary", {}).get("total_test_cases", 0),
-                "🧪"
+                ""
             )
         
         with col3:
             self._render_metric_card(
                 "Execution Time",
                 f"{latest_results.get('execution_time', 0):.1f}s",
-                "⏱️"
+                ""
             )
         
         with col4:
@@ -156,14 +156,14 @@ class RAGDashboard:
             self._render_metric_card(
                 "Performance",
                 performance_grade,
-                "🎯"
+                ""
             )
         
         # Chunking evaluation metrics if available
         if "steps" in latest_results and "indexing" in latest_results["steps"]:
             indexing_results = latest_results["steps"]["indexing"]
             if indexing_results.get("chunking_quality") is not None:
-                st.subheader("🔍 Chunking Evaluation Metrics")
+                st.subheader("Chunking Evaluation Metrics")
                 
                 chunk_col1, chunk_col2, chunk_col3, chunk_col4 = st.columns(4)
                 
@@ -171,49 +171,57 @@ class RAGDashboard:
                     self._render_metric_card(
                         "Chunking Quality",
                         f"{indexing_results.get('chunking_quality', 0):.3f}",
-                        "📄"
+                        ""
                     )
                 
                 with chunk_col2:
                     self._render_metric_card(
                         "Processing Quality",
                         f"{indexing_results.get('processing_quality', 0):.3f}",
-                        "🔧"
+                        ""
                     )
                 
                 with chunk_col3:
                     self._render_metric_card(
                         "Total Chunks",
                         indexing_results.get('total_chunks', 0),
-                        "📊"
+                        ""
                     )
                 
                 with chunk_col4:
                     self._render_metric_card(
                         "Evaluation Time",
                         f"{indexing_results.get('evaluation_time', 0):.2f}s",
-                        "⏱️"
+                        ""
                     )
                 
-                # Detailed chunking metrics
+                # Detailed chunking metrics - check multiple possible locations
+                quality_metrics = None
                 if "quality_metrics" in indexing_results and indexing_results["quality_metrics"]:
                     quality_metrics = indexing_results["quality_metrics"]
-                    if "chunking" in quality_metrics:
-                        st.subheader("📊 Detailed Chunking Metrics")
-                        chunk_details = quality_metrics["chunking"]
-                        
-                        detail_col1, detail_col2, detail_col3 = st.columns(3)
-                        with detail_col1:
-                            st.metric("Coherence", f"{chunk_details.get('coherence', 0):.3f}")
-                            st.metric("Completeness", f"{chunk_details.get('completeness', 0):.3f}")
-                        
-                        with detail_col2:
-                            st.metric("Overlap Quality", f"{chunk_details.get('overlap_quality', 0):.3f}")
-                            st.metric("Size Consistency", f"{chunk_details.get('size_consistency', 0):.3f}")
-                        
-                        with detail_col3:
-                            st.metric("Semantic Boundaries", f"{chunk_details.get('semantic_boundaries', 0):.3f}")
-                            st.metric("Overall Quality", f"{chunk_details.get('overall', 0):.3f}")
+                elif "results" in indexing_results and indexing_results["results"]:
+                    # Check if quality metrics are in the results
+                    for result in indexing_results["results"]:
+                        if isinstance(result, dict) and "quality_metrics" in result:
+                            quality_metrics = result["quality_metrics"]
+                            break
+                
+                if quality_metrics and "chunking" in quality_metrics:
+                    st.subheader("Detailed Chunking Metrics")
+                    chunk_details = quality_metrics["chunking"]
+                    
+                    detail_col1, detail_col2, detail_col3 = st.columns(3)
+                    with detail_col1:
+                        st.metric("Coherence", f"{chunk_details.get('coherence', 0):.3f}")
+                        st.metric("Completeness", f"{chunk_details.get('completeness', 0):.3f}")
+                    
+                    with detail_col2:
+                        st.metric("Overlap Quality", f"{chunk_details.get('overlap_quality', 0):.3f}")
+                        st.metric("Size Consistency", f"{chunk_details.get('size_consistency', 0):.3f}")
+                    
+                    with detail_col3:
+                        st.metric("Semantic Boundaries", f"{chunk_details.get('semantic_boundaries', 0):.3f}")
+                        st.metric("Overall Quality", f"{chunk_details.get('overall', 0):.3f}")
         
         # Component scores chart
         st.subheader("Component Performance")
@@ -225,7 +233,7 @@ class RAGDashboard:
     
     def _render_detailed_metrics(self):
         """Render detailed metrics analysis"""
-        st.header("📈 Detailed Metrics Analysis")
+        st.header("Detailed Metrics Analysis")
         
         latest_results = self._load_latest_results()
         
@@ -242,7 +250,7 @@ class RAGDashboard:
     
     def _render_component_analysis(self):
         """Render component-specific analysis"""
-        st.header("🔍 Component Analysis")
+        st.header("Component Analysis")
         
         # Component selection
         component = st.selectbox("Select Component", ["retriever", "generator"])
@@ -264,7 +272,7 @@ class RAGDashboard:
     
     def _render_historical_trends(self):
         """Render historical trends analysis"""
-        st.header("📊 Historical Trends")
+        st.header("Historical Trends")
         
         # Load historical data
         historical_data = self._load_historical_evaluation_data()
@@ -287,7 +295,7 @@ class RAGDashboard:
     
     def _render_system_health(self):
         """Render system health monitoring"""
-        st.header("🏥 System Health")
+        st.header("System Health")
         
         # System status
         col1, col2 = st.columns(2)
@@ -306,7 +314,7 @@ class RAGDashboard:
     
     def _render_run_evaluation(self):
         """Render evaluation execution interface"""
-        st.header("🚀 Run New Evaluation")
+        st.header("Run New Evaluation")
         
         with st.form("evaluation_form"):
             col1, col2 = st.columns(2)
@@ -319,7 +327,7 @@ class RAGDashboard:
                 document_paths = st.text_area("Document Paths (one per line)", help="Leave empty to use sample documents")
                 save_results = st.checkbox("Save Results", value=True)
             
-            submitted = st.form_submit_button("🎯 Run Evaluation")
+            submitted = st.form_submit_button("Run Evaluation")
             
             if submitted:
                 self._run_evaluation(dataset, dataset_size, document_paths, save_results)
